@@ -3,5 +3,15 @@
  */
 package org.elysium.serializer;
 
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.xtext.RuleCall;
+import org.eclipse.xtext.nodemodel.INode;
+
 public class LilyPondSyntacticSequencer extends AbstractLilyPondSyntacticSequencer {
+
+	@Override
+	protected String getASSIGNMENT_NLToken(EObject semanticObject,
+			RuleCall ruleCall, INode node) {
+		return "";
+	}
 }

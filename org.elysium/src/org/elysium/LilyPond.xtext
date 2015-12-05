@@ -1,4 +1,4 @@
-grammar org.elysium.LilyPond hidden(WS, SL_COMMENT, ML_COMMENT, NL_NOINDENT)
+grammar org.elysium.LilyPond hidden(WS, SL_COMMENT, ML_COMMENT)
 
 generate lilypond "http://www.elysium.org/LilyPond"
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
@@ -38,7 +38,7 @@ Number: value=INT;
 
 SpecialCommand: Include | Version | SourceFileName | SourceFileLine | Markup | MarkupLines | MarkupList | BlockCommand | OutputDefinition | RelativeMusic | TransposedMusic | ModeChange | MusicWithLyrics | NewContext | ContextDef | Other;
 
-Include: "\\" keyword="include" importURI=STRING;
+Include: "\\" keyword="include" (importURI=STRING | '\\'Identifier);
 
 Version: "\\" keyword="version" version=STRING;
 
@@ -46,16 +46,16 @@ SourceFileName: "\\" keyword="sourcefilename" filename=STRING;
 
 SourceFileLine: "\\" keyword="sourcefileline" line=INT;
 
-Markup: "\\" keyword="markup" body=MarkupBody; // XXX very messy 
+Markup: "\\" ->(keyword="markup" body=MarkupBody); // XXX very messy 
 
-MarkupLines: "\\" keyword="markuplines" body=MarkupBody;
+MarkupLines: "\\" ->(keyword="markuplines" body=MarkupBody);
 
-MarkupList: "\\" keyword=("markuplist") body=MarkupBody;
+MarkupList: "\\" ->(keyword=("markuplist") body=MarkupBody);
 
 //I split up Scheme/SchemeText, using special definitions for the MarkupBody-Command-case
 //so that I can enforce different hidden-Definitions
 //that way I can prevent the eating up of assignments that start on a new line without indentation
-MarkupBody: {MarkupBody} command+=(MarkupCommandScheme | MarkupCommandSchemeText | UnparsedCommand)* block=UnparsedBlock?; // XXX SchemeText? see tocItemWithDotsMarkup
+MarkupBody: {MarkupBody} command+=(Scheme | SchemeText | UnparsedCommand)* block=UnparsedBlock? ASSIGNMENT_NL; // XXX SchemeText? see tocItemWithDotsMarkup
 
 BlockCommand: "\\" keyword=("book" | "bookpart" | "header" | "score") block=SimpleBlock;
 
@@ -89,14 +89,11 @@ SpecialCommandName: "define" | "include" | "version" | "sourcefilename" | "sourc
 
 // Scheme
 
-Scheme hidden(WS, SL_COMMENT, ML_COMMENT, SCHEME_SL_COMMENT, SCHEME_ML_COMMENT, NL_NOINDENT): ("#" | "$") value=SchemeExpression;
-MarkupCommandScheme returns Scheme hidden(WS, SL_COMMENT, ML_COMMENT, SCHEME_SL_COMMENT, SCHEME_ML_COMMENT): ("#" | "$") value=MarkupSchemeExpression;
+Scheme hidden(WS, SL_COMMENT, ML_COMMENT, SCHEME_SL_COMMENT, SCHEME_ML_COMMENT): ("#" | "$") value=SchemeExpression;
 
 SchemeExpression: quotations+=("'" | "`" | "," | "@")* reference?="$"? value=SchemeValue;
-MarkupSchemeExpression returns SchemeExpression: quotations+=("'" | "`" | "," | "@")* reference?="$"? value=MarkupSchemeValue;
 
 SchemeValue: SchemeBoolean | SchemeList | SchemeBlock | SchemeCharacter | SchemeNumber | SchemeText | SchemeMarkupCommand;
-MarkupSchemeValue returns SchemeValue: SchemeBoolean | SchemeList | SchemeBlock | SchemeCharacter /*| SchemeNumber*/ | SchemeText | SchemeMarkupCommand;
 
 SchemeBoolean: value=SchemeBooleanValue;
 
@@ -110,7 +107,6 @@ SchemeBlock: "#{" elements+=Expression+ "#}";
 SchemeCharacter: "#\\" value=(ID | SpecialCharacter | '-' | ANY_OTHER);
 
 SchemeText: value=SchemeTextValue;
-MarkupCommandSchemeText returns SchemeText hidden(WS, SL_COMMENT, ML_COMMENT): value=SchemeTextValue;
 
 SchemeTextValue: SchemeTextValueSegment (":" ":"? SchemeTextValueSegment)*;
 
@@ -139,8 +135,8 @@ terminal INT returns ecore::EInt: ("0".."9")+;
 
 terminal ID: ("a".."z" | "A".."Z" | "¡".."ￜ")+;
 
-//for distinguishing new line with no indentation -> heuristic is we are not in a markup anymore
-terminal NL_NOINDENT: (("\r" | "\n")*(" " | "\t" ))* ("\r" | "\n")+;
+//synthetic token inserted in order to mark the (assumed) end of a markup
+terminal ASSIGNMENT_NL: "synthetic:ASSIGNMENT_NL";
 
 terminal WS: (" " | "\t" | "\r" | "\n")+;
 

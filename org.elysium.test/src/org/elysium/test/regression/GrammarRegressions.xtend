@@ -414,4 +414,86 @@ class GrammarRegressions {
 	def void clef() {
 		'''{ \clef treble }'''.parseWithoutErrors
 	}
+
+	@Test
+	def void markupEndRecognition1() {
+		'''
+			\score {
+			  <<
+			    \new Staff {
+			      \relative c''
+			      \new Voice = "vocal" {
+			        c d~^\markup default  d e
+			        c d~^\markup "right aligned" d e
+			      }
+			    }
+			  >>
+			}
+		'''.parseWithoutErrors
+	}
+
+	@Test
+	def void markupEndRecognition2() {
+		'''
+			\relative c' {
+			  <<
+			    {
+			      des16_\markup \with-dimensions #'(2 . 7) #'(0 . 0)
+			                    \with-color #white
+			                    \filled-box #'(2 . 7) #'(0 . 2) #0
+			      r8. des4 ~ des16->\sff
+			    }
+			  >>
+			}
+		'''.parseWithoutErrors
+	}
+
+	@Test
+	def void markupEndRecognition3() {
+		'''
+			incipit =
+			#(define-music-function (parser location incipit-music) (ly:music?)
+			  #{
+			    \once \override Staff.InstrumentName.self-alignment-X = #RIGHT
+			    \once \override Staff.InstrumentName.self-alignment-Y = ##f
+			    \once \override Staff.InstrumentName.padding = #0.3
+			    \once \override Staff.InstrumentName.stencil =
+			      #(lambda (grob)
+				 (let* ((instrument-name (ly:grob-property grob 'long-text)))
+				   (set! (ly:grob-property grob 'long-text)
+					 #{ \markup
+					      \score
+					         {
+						   { \context MensuralStaff \with {
+				                        instrumentName = #instrument-name
+				                     } $incipit-music
+						   }
+				                   \layout { $(ly:grob-layout grob)
+						             line-width = \indent
+					                     indent =
+							% primitive-eval is probably easiest for
+							% escaping lexical closure and evaluating
+							% everything respective to (current-module).
+				                             #(primitive-eval
+			                                       '(or (false-if-exception (- indent incipit-width))
+								    (* 0.5 indent)))
+						             ragged-right = ##f
+						             ragged-last = ##f
+						             system-count = #1 }
+						 }
+					  #})
+			           (system-start-text::print grob)))
+			  #})
+			
+			%%%%%%%%%%%%%%%%%%%%%%%%%
+		'''.parseWithoutErrors
+	}
+
+	@Test
+	def void markupEndRecognition4() {
+		'''
+			tocItemWithDotsMarkup = \markup \fill-with-pattern #1 #RIGHT .
+			  \fromproperty #'toc:text \fromproperty #'toc:page
+		'''.parseWithoutErrors
+	}
 }
