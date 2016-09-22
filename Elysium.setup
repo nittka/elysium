@@ -217,6 +217,57 @@
       xsi:type="launching:LaunchTask"
       excludedTriggers="MANUAL"
       launcher="/org.elysium/src/org/elysium/GenerateLilyPond.mwe2.launch"/>
+  <setupTask
+      xsi:type="setup:CompoundTask"
+      id="includeTestProjectSetup"
+      name="Setup of Include Test Project">
+    <setupTask
+        xsi:type="setup:ResourceCopyTask"
+        sourceURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/score.template"
+        targetURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/score.ly"/>
+    <setupTask
+        xsi:type="setup:TextModifyTask"
+        url="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/score.ly"
+        encoding="UTF-8">
+      <modification
+          pattern="(absProjectPath)">
+        <substitution>${git.clone.elysium.location|path}/org.elysium.test/resources/includeResolution</substitution>
+      </modification>
+      <description>set absoulte location in includeResolution test project</description>
+    </setupTask>
+    <setupTask
+        xsi:type="setup:ResourceCopyTask"
+        sourceURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/include.template"
+        targetURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/include.ly"/>
+    <setupTask
+        xsi:type="setup:ResourceCopyTask"
+        sourceURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/include.template"
+        targetURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/in clude.ly"/>
+    <setupTask
+        xsi:type="setup:ResourceCopyTask"
+        sourceURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/include.template"
+        targetURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/folder/include.ly"/>
+    <setupTask
+        xsi:type="setup:ResourceCopyTask"
+        sourceURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/include.template"
+        targetURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/folder/in clude.ly"/>
+    <setupTask
+        xsi:type="setup:ResourceCopyTask"
+        sourceURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/include.template"
+        targetURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/fol der/include.ly"/>
+    <setupTask
+        xsi:type="setup:ResourceCopyTask"
+        sourceURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/include.template"
+        targetURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/fol der/in clude.ly"/>
+    <setupTask
+        xsi:type="setup:ResourceCopyTask"
+        sourceURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/include.template"
+        targetURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/include.ly"/>
+    <setupTask
+        xsi:type="setup:ResourceCopyTask"
+        sourceURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/theProject/include.template"
+        targetURL="${git.clone.elysium.location|uri}/org.elysium.test/resources/includeResolution/in clude.ly"/>
+  </setupTask>
   <stream name="master"
       label="master">
     <description>master</description>

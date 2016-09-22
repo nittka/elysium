@@ -10,6 +10,8 @@ import java.util.List;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.scoping.impl.ImportUriResolver;
@@ -26,8 +28,6 @@ import com.google.inject.Inject;
  * Resolves importURIs by first searching in LilyPond's default include path.
  */
 public class LilyPondImportUriResolver extends ImportUriResolver {
-
-	private static final boolean IS_WINDOWS = Optional.fromNullable(System.getProperty("os.name")).or("another").toLowerCase().contains("win");//$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
 
 	@Inject
 	private ILilyPondPathProvider lilyPondPathProvider;
@@ -58,11 +58,10 @@ public class LilyPondImportUriResolver extends ImportUriResolver {
 		searchUris.add(defaultSearchUri);
 
 		for (URI searchUri : searchUris) {
-			URI resolvedImportUri = saferResolve(searchUri, importUri);
-			File importedFile = new File(resolvedImportUri);
-			if (importedFile.exists()) {
-				//TODO fileNameCasing is a problem here
-				//TADA exists although file name is tada
+			String resolvedImportUri = saferResolve(searchUri, importUri);
+			if (existsFile(resolvedImportUri)) {
+				//TODO fileNameCasing may be a problem here
+				//TADA exists although file name is tada; LilyPond compilation works, though!
 				return potentialPlatformURI(resourceURI, importUri, resolvedImportUri.toString(), true);
 			}
 		}
@@ -76,14 +75,14 @@ public class LilyPondImportUriResolver extends ImportUriResolver {
 		LilyPondImportUri.Type type=fromSearchPath?LilyPondImportUri.Type.searchPath:LilyPondImportUri.Type.relative;
 		boolean inWorkspace=true;
 		if(Platform.isRunning() && !uri.isRelative()){
-			if(URI.create(originalImportUri).isAbsolute()){
+			if(Path.fromPortableString(originalImportUri).isAbsolute()){
 				type=LilyPondImportUri.Type.absolute;
 			}
 			String platformString = Platform.getLocation().toString();
 			int index = uriString.indexOf(platformString);
 			if(index>=0){
 				String relative = uriString.substring(index+platformString.length()+1);
-				uriString = org.eclipse.emf.common.util.URI.createPlatformResourceURI(relative, true).toString();
+				uriString = org.eclipse.emf.common.util.URI.createPlatformResourceURI(relative, false).toString();
 			}else{
 				inWorkspace=false;
 			}
@@ -91,27 +90,28 @@ public class LilyPondImportUriResolver extends ImportUriResolver {
 		return new LilyPondImportUri(originalImportUri, uriString, type, inWorkspace);
 	}
 
-	private URI saferResolve(URI base, String importUri){
-		URI resolvedImportUri = base.resolve(org.eclipse.emf.common.util.URI.encodeOpaquePart(importUri, true));
-		boolean needToHandleAbsoluteWindowsLocation=IS_WINDOWS && resolvedImportUri.getScheme()!=null && !"file".equals(resolvedImportUri.getScheme());//$NON-NLS-1$
-		if(needToHandleAbsoluteWindowsLocation){
-			return URI.create("file:/"+resolvedImportUri.toString());//$NON-NLS-1$
+	String saferResolve(URI base, String importUri){
+		IPath importPath = Path.fromPortableString(importUri);
+		if(importPath.isAbsolute()){
+			return importPath.makeAbsolute().toFile().toURI().toString();
 		}else{
-			return resolvedImportUri;
+			URI resolved = base.resolve(org.eclipse.emf.common.util.URI.encodeOpaquePart(importUri, true));
+			return resolved.toString();
 		}
 	}
 
 	private Optional<LilyPondImportUri> getFileUriOutsideWorkspace(org.eclipse.emf.common.util.URI currentResourceUri, String importUri){
 		if(importUri.contains("..")){//$NON-NLS-1$
 			if(currentResourceUri!=null && currentResourceUri.isPlatform()){
-				File currentResourceAsFile = new File(Platform.getLocation()+currentResourceUri.toPlatformString(false));
+				IWorkspaceRoot workspaceRoot= ResourcesPlugin.getWorkspace().getRoot();
+				IFile currentResourceAsIFile=workspaceRoot.getFile(Path.fromPortableString(currentResourceUri.toPlatformString(false)));
+				File currentResourceAsFile = currentResourceAsIFile.getLocation().toFile();
 				if (currentResourceAsFile.exists()) {
-					URI resolvedImportUri = saferResolve(currentResourceAsFile.toURI(), importUri);
-					IWorkspaceRoot workspaceRoot= ResourcesPlugin.getWorkspace().getRoot();
-					IFile[] importedFileFoundInWorkspace = workspaceRoot.findFilesForLocationURI(resolvedImportUri);
+					String resolvedImportUri = saferResolve(currentResourceAsFile.toURI(), importUri);
+					IFile[] importedFileFoundInWorkspace = workspaceRoot.findFilesForLocationURI(new File(URI.create(resolvedImportUri)).toURI());
 					if(importedFileFoundInWorkspace.length==0){
-						File importedFile = new File(resolvedImportUri);
-						if (importedFile.exists()) {
+						if (existsFile(resolvedImportUri)) {
+							//must be relative, because absolute imports have been returned by the search path resolution already
 							return Optional.of(new LilyPondImportUri(importUri, resolvedImportUri.toString(), LilyPondImportUri.Type.relative, false));
 						}
 					}
@@ -154,6 +154,11 @@ public class LilyPondImportUriResolver extends ImportUriResolver {
 
 	private static URI stringToUri(String lilypondPath) {
 		return new File(lilypondPath).toURI();
+	}
+
+	private boolean existsFile(String resolvedImport){
+		File importedFile = new File(URI.create(resolvedImport));
+		return importedFile.exists();
 	}
 
 }

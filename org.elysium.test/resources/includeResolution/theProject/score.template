@@ -1,0 +1,44 @@
+\version "2.18.0"
+
+\header {
+	tagline = ""
+}
+
+%relative includes within the workspace
+
+%\include "include.ly" 
+%\include "in clude.ly"
+%\include "folder/in clude.ly"
+%\include "fol der/include.ly"
+%\include "../theProject/include.ly"   
+%\include "../theProject/fol der/include.ly"
+
+
+%absolute includes within the workspace
+
+%\include "absProjectPath/theProject/include.ly"
+%\include "absProjectPath/theProject/in clude.ly"
+%\include "absProjectPath/theProject/../theProject/include.ly"
+
+
+%relative includes outside the workspace
+
+%\include "../in clude.ly"
+%\include "../include.ly"
+
+
+%absolute includes outside the workspace
+
+%\include "absProjectPath/include.ly"
+%\include "absProjectPath/../includeResolution/in clude.ly"
+%\include "absProjectPath/in clude.ly"
+
+music = \relative c' {
+	c \thump
+}
+
+\score {
+	\new Staff \music
+	\layout {}
+	\midi {}
+}
