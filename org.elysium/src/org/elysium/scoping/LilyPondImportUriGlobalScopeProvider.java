@@ -26,6 +26,7 @@ import org.eclipse.xtext.scoping.impl.ImportUriResolver;
 import org.eclipse.xtext.scoping.impl.LoadOnDemandResourceDescriptions;
 import org.eclipse.xtext.scoping.impl.SelectableBasedScope;
 import org.eclipse.xtext.util.IResourceScopeCache;
+import org.elysium.LilyPondConstants;
 import org.elysium.lilypond.Include;
 import org.elysium.lilypond.LilypondFactory;
 
@@ -81,7 +82,9 @@ public class LilyPondImportUriGlobalScopeProvider extends AbstractGlobalScopePro
 		Collections.reverse(urisAsList);
 		IScope scope = IScope.NULLSCOPE;
 		for (URI uri : urisAsList) {
-			scope = createLazyResourceScope(scope, uri, descriptions, type, filter, ignoreCase);
+			if(LilyPondConstants.EXTENSIONS.contains(uri.fileExtension())){
+				scope = createLazyResourceScope(scope, uri, descriptions, type, filter, ignoreCase);
+			}
 		}
 		return scope;
 	}

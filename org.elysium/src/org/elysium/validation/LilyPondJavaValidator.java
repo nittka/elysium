@@ -76,9 +76,11 @@ public class LilyPondJavaValidator extends AbstractLilyPondJavaValidator {
 
 		String unresolvableIncludeCode=LilyPondConstants.isStandalone(include)?IssueCodes.UNRESOLVABLE_INCLUDE_STANDALONE:IssueCodes.UNRESOLVABLE_INCLUDE_ILY;
 		if(include.getImportURI()!=null && !isIgnored(unresolvableIncludeCode)){
-			String resolved = importUriResolver.resolve(include);
-			if (!EcoreUtil2.isValidUri(include, URI.createURI(resolved))) {
+			URI resolved = URI.createURI(importUriResolver.resolve(include));
+			if (!EcoreUtil2.isValidUri(include, resolved)) {
 				addIssue("Include could not be resolved", getCurrentObject(), LilypondPackage.Literals.INCLUDE__IMPORT_URI, unresolvableIncludeCode);
+			}else if(!LilyPondConstants.EXTENSIONS.contains(resolved.fileExtension())){
+				warning("include does not have a known file extension; variables may not be resolved correctly", LilypondPackage.Literals.INCLUDE__IMPORT_URI);
 			}
 		}
 	}
