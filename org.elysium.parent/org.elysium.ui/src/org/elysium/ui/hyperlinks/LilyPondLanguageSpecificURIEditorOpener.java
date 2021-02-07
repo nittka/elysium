@@ -1,13 +1,15 @@
 package org.elysium.ui.hyperlinks;
 
 import java.text.MessageFormat;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.util.ResourceUtils;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -37,9 +39,9 @@ public class LilyPondLanguageSpecificURIEditorOpener extends LanguageSpecificURI
 		String fragment = uri.fragment();
 		if(uri.isFile()) {
 			//if it is a file URI first try to find a workspace version of the file
-			IFile[] files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(java.net.URI.create(uri.toString()));
-			for (IFile iFile : files) {
-				if(iFile.exists()) {
+			List<IResource> files = ResourceUtils.findPlatformResources(java.net.URI.create(uri.toString()));
+			for (IResource iFile : files) {
+				if(iFile instanceof IFile) {
 					uri=URI.createPlatformResourceURI(iFile.getFullPath().toString(), true);
 					if(fragment!=null) {
 						uri=uri.appendFragment(fragment);

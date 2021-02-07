@@ -11,8 +11,8 @@ import java.util.Optional;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.emf.util.ResourceUtils;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ui.console.IHyperlink;
@@ -181,10 +181,10 @@ public class ProblemParser {
 				} else {
 					File file=getFileFromPath(path);
 					if(file.exists()) {
-						IFile[] files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(file.toURI());
-						for (IFile iFile : files) {
-							if(iFile.exists()) {
-								return iFile;
+						List<IResource> files = ResourceUtils.findPlatformResources(file.toURI());
+						for (IResource iFile : files) {
+							if(iFile instanceof IFile) {
+								return (IFile)iFile;
 							}
 						}
 						initWorkspaceExternalIssue(file, line, infoSections);

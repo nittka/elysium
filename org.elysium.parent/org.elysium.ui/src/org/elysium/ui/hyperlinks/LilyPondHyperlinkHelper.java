@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -136,9 +135,9 @@ public class LilyPondHyperlinkHelper extends HyperlinkHelper {
 	private IDocument getDocumentForXtextResource(XtextResource xtextResource) throws CoreException, IOException {
 		IResource resource = ResourceUtils.convertEResourceToPlatformResource(xtextResource);
 		if(resource == null && xtextResource.getURI().isFile()) {
-			IFile[] wsResources = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(java.net.URI.create(xtextResource.getURI().toString()));
-			for (IFile iFile : wsResources) {
-				if(iFile.exists()) {
+			List<IResource> wsResources = ResourceUtils.findPlatformResources(java.net.URI.create(xtextResource.getURI().toString()));
+			for (IResource iFile : wsResources) {
+				if(iFile instanceof IFile) {
 					resource=iFile;
 					break;
 				}

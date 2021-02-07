@@ -15,7 +15,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -306,13 +305,17 @@ class LilyPondRefactoring {
 		}
 	}
 
-	public IFile asFile(URI platformUri){
-		IFile file=platformURItoFileOfRefactorTargets.get(platformUri);
-		if(file!=null){
+	public IFile asFile(URI platformUri) {
+		IFile file = platformURItoFileOfRefactorTargets.get(platformUri);
+		if (file != null) {
 			return file;
-		}else{
-			//TODO use util method for obtaining the file
-			return ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(platformUri.toPlatformString(true)));
+		} else {
+			IResource result = org.eclipse.emf.util.ResourceUtils.findPlatformResource(platformUri);
+			if (result instanceof IFile) {
+				return (IFile) result;
+			} else {
+				throw new IllegalStateException(platformUri + " ist not a file");
+			}
 		}
 	}
 

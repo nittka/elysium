@@ -101,16 +101,16 @@ public class LilyPondProposalProvider extends AbstractLilyPondProposalProvider {
 
 	private IResource getResource(EObject model) {
 		URI modelUri = model.eResource().getURI();
-		IResource resource=null;
-		if(modelUri.isFile()) {
-			IFile[] files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(java.net.URI.create(modelUri.toString()));
-			for (IFile iFile : files) {
-				if(iFile.exists()) {
-					resource=iFile;
+		IResource resource = null;
+		if (modelUri.isFile()) {
+			List<IResource> files = ResourceUtils.findPlatformResources(java.net.URI.create(modelUri.toString()));
+			for (IResource iFile : files) {
+				if (iFile instanceof IFile) {
+					resource = iFile;
 					break;
 				}
 			}
-		}else if(modelUri.isPlatform()) {
+		} else if (modelUri.isPlatform()) {
 			resource = ResourceUtils.convertEResourceToPlatformResource(model.eResource());
 		}
 		return resource;

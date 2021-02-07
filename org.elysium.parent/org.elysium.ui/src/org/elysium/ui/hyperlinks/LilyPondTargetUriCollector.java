@@ -1,11 +1,13 @@
 package org.elysium.ui.hyperlinks;
 
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.util.ResourceUtils;
 import org.eclipse.xtext.findReferences.TargetURICollector;
 import org.eclipse.xtext.findReferences.TargetURIs;
 
@@ -21,9 +23,9 @@ public class LilyPondTargetUriCollector extends TargetURICollector {
 			if(uri.isFile()) {
 				String fragment = uri.fragment();
 				//TODO similar findFilesForLocationURI for file URIS is now used in LilyPondProposalProvider, LilyPondHyperlinkHelper, LilyPondLanguageSpecificURIEditorOpener, ProblemParser and here
-				IFile[] files = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(java.net.URI.create(uri.toString()));
-				for (IFile iFile : files) {
-					if(iFile.exists()) {
+				List<IResource> files = ResourceUtils.findPlatformResources(java.net.URI.create(uri.toString()));
+				for (IResource iFile : files) {
+					if(iFile instanceof IFile) {
 						URI uriToAdd = URI.createPlatformResourceURI(iFile.getFullPath().toString(), true);
 						if(fragment!=null) {
 							uriToAdd=uriToAdd.appendFragment(fragment);
